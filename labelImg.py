@@ -173,6 +173,13 @@ class MainWindow(QMainWindow, WindowMixin):
         self.file_list_widget.itemDoubleClicked.connect(self.file_item_double_clicked)
         file_list_layout = QVBoxLayout()
         file_list_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Create and add a search bar for filtering file names
+        self.file_search_bar = QLineEdit()
+        self.file_search_bar.setPlaceholderText("Search File Names")
+        self.file_search_bar.textChanged.connect(self.filter_file_list)
+        file_list_layout.addWidget(self.file_search_bar)
+
         file_list_layout.addWidget(self.file_list_widget)
         file_list_container = QWidget()
         file_list_container.setLayout(file_list_layout)
@@ -273,12 +280,12 @@ class MainWindow(QMainWindow, WindowMixin):
         create_mode = action(get_str('crtBox'), self.set_create_mode,
                              'w', 'new', get_str('crtBoxDetail'), enabled=False)
         edit_mode = action(get_str('editBox'), self.set_edit_mode,
-                           'Ctrl+J', 'edit', get_str('editBoxDetail'), enabled=False)
+                           's', 'edit', get_str('editBoxDetail'), enabled=False)
 
         create = action(get_str('crtBox'), self.create_shape,
                         'w', 'new', get_str('crtBoxDetail'), enabled=False)
         delete = action(get_str('delBox'), self.delete_selected_shape,
-                        'Delete', 'delete', get_str('delBoxDetail'), enabled=False)
+                        'x', 'delete', get_str('delBoxDetail'), enabled=False)
         copy = action(get_str('dupBox'), self.copy_selected_shape,
                       'Ctrl+D', 'copy', get_str('dupBoxDetail'),
                       enabled=False)
@@ -664,6 +671,17 @@ class MainWindow(QMainWindow, WindowMixin):
             self.recent_files.pop()
         self.recent_files.insert(0, file_path)
 
+    #Filter File List Function
+    def filter_file_list(self):
+        search_text = self.file_search_bar.text().lower()
+        for index in range(self.file_list_widget.count()):
+            item = self.file_list_widget.item(index)
+            item_text = item.text().lower()
+            if search_text in item_text:
+                item.setHidden(False)
+            else:
+                item.setHidden(True)
+                
     def beginner(self):
         return self._beginner
 
