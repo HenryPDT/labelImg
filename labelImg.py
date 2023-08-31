@@ -270,7 +270,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         close = action(get_str('closeCur'), self.close_file, 'Ctrl+W', 'close', get_str('closeCurDetail'))
 
-        delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'close', get_str('deleteImgDetail'))
+        delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'close', get_str('deleteImgDetail')) #deletes both the image and associated label
 
         reset_all = action(get_str('resetAll'), self.reset_all, None, 'resetall', get_str('resetAllDetail'))
 
@@ -1536,10 +1536,16 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def delete_image(self):
         delete_path = self.file_path
+        filename, _ = os.path.splitext(delete_path.rsplit('/', 1)[-1])  # Extracts the filename without extension
+        delete_label_path = os.path.join(self.default_save_dir,filename + ".txt")
+        print(self.file_path)
+        print(delete_label_path)
         if delete_path is not None:
             idx = self.cur_img_idx
             if os.path.exists(delete_path):
                 os.remove(delete_path)
+                os.remove(delete_label_path)
+                print("Deleted"+delete_path+"and"+delete_label_path)
             self.import_dir_images(self.last_open_dir)
             if self.img_count > 0:
                 self.cur_img_idx = min(idx, self.img_count - 1)
