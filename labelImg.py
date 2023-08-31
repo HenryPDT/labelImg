@@ -36,6 +36,7 @@ from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.lightWidget import LightWidget
 from libs.labelDialog import LabelDialog
+from libs.renameDialog import RenameDialog
 from libs.colorDialog import ColorDialog
 from libs.labelFile import LabelFile, LabelFileError, LabelFileFormat
 from libs.toolBar import ToolBar
@@ -142,6 +143,9 @@ class MainWindow(QMainWindow, WindowMixin):
         self.diffc_button.stateChanged.connect(self.button_state)
         self.edit_button = QToolButton()
         self.edit_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+
+        # Create a widget for rename function
+        self.rename_dialog = RenameDialog(parent=self)
 
         # Add some of widgets to list_layout
         list_layout.addWidget(self.edit_button)
@@ -270,7 +274,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
         close = action(get_str('closeCur'), self.close_file, 'Ctrl+W', 'close', get_str('closeCurDetail'))
 
-        delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'close', get_str('deleteImgDetail')) #deletes both the image and associated label
+        delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'delete', get_str('deleteImgDetail')) #deletes both the image and associated label
+
+        rename_image = action(get_str('renameImg'), self.rename_image, 'Ctrl+Shift+C', 'rename', get_str('renameImgDetail')) #deletes both the image and associated label
 
         reset_all = action(get_str('resetAll'), self.reset_all, None, 'resetall', get_str('resetAllDetail'))
 
@@ -387,7 +393,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.draw_squares_option.triggered.connect(self.toggle_draw_square)
 
         # Store actions for further handling.
-        self.actions = Struct(save=save, save_format=save_format, saveAs=save_as, open=open, close=close, resetAll=reset_all, deleteImg=delete_image,
+        self.actions = Struct(save=save, save_format=save_format, saveAs=save_as, open=open, close=close, resetAll=reset_all, deleteImg=delete_image, renameImg=rename_image, 
                               lineColor=color1, create=create, delete=delete, edit=edit, copy=copy,
                               createMode=create_mode, editMode=edit_mode, advancedMode=advanced_mode,
                               shapeLineColor=shape_line_color, shapeFillColor=shape_fill_color,
@@ -434,7 +440,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.display_label_option.triggered.connect(self.toggle_paint_labels_option)
 
         add_actions(self.menus.file,
-                    (open, open_dir, change_save_dir, open_annotation, copy_prev_bounding, self.menus.recentFiles, save, save_format, save_as, close, reset_all, delete_image, quit))
+                    (open, open_dir, change_save_dir, open_annotation, copy_prev_bounding, self.menus.recentFiles, save, save_format, save_as, close, reset_all, delete_image, rename_image, quit))
         add_actions(self.menus.help, (help_default, show_info, show_shortcut))
         add_actions(self.menus.view, (
             self.auto_saving,
@@ -1553,6 +1559,34 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.load_file(filename)
             else:
                 self.close_file()
+
+    def rename_image(self):
+        old_path = self.file_path
+        old_filename, ext = os.path.splitext(old_path.rsplit('/', 1)[-1])
+        old_label_path = os.path.join(self.default_save_dir, old_filename + ".txt")
+        
+        self.rename_dialog = RenameDialog(old_filename, self)
+        new_filename = self.rename_dialog.pop_up()
+
+        if new_filename is not None:
+            new_path = os.path.join(self.last_open_dir, new_filename + ext)
+            new_label_path = os.path.join(self.default_save_dir, new_filename + ".txt")
+            
+            if old_path is not None:
+                idx = self.cur_img_idx
+                if os.path.exists(old_path):
+                    os.rename(old_path, new_path)
+                    os.rename(old_label_path, new_label_path)
+                    print("Renamed " + old_path + " to " + new_path)
+                    print("Renamed " + old_label_path + " to " + new_label_path)
+                
+                self.import_dir_images(self.last_open_dir)
+                if self.img_count > 0:
+                    self.cur_img_idx = min(idx, self.img_count - 1)
+                    filename = self.m_img_list[self.cur_img_idx]
+                    self.load_file(filename)
+                else:
+                    self.close_file()
 
     def reset_all(self):
         self.settings.reset()
