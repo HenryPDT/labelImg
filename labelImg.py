@@ -174,7 +174,8 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dock.setWidget(label_list_container)
 
         self.file_list_widget = QListWidget()
-        self.file_list_widget.itemDoubleClicked.connect(self.file_item_double_clicked)
+        self.file_list_widget.itemDoubleClicked.connect(self.save_file) #save file before going to a different file 
+        self.file_list_widget.itemDoubleClicked.connect(self.file_item_double_clicked) #double click file to go to next file
         file_list_layout = QVBoxLayout()
         file_list_layout.setContentsMargins(0, 0, 0, 0)
         

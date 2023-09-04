@@ -245,7 +245,9 @@ Hotkeys
 +--------------------+--------------------------------------------+
 | Ctrl + d           | Copy the current label and rect box        |
 +--------------------+--------------------------------------------+
-| Ctrl + Shift + d   | Delete the current image                   |
+| Ctrl + Shift + d   | Delete the current image and label         |
++--------------------+--------------------------------------------+
+| Ctrl + Shift + c   | Rename the current image and label         |
 +--------------------+--------------------------------------------+
 | Space              | Flag the current image as verified         |
 +--------------------+--------------------------------------------+
