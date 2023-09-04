@@ -36,6 +36,7 @@ from libs.canvas import Canvas
 from libs.zoomWidget import ZoomWidget
 from libs.lightWidget import LightWidget
 from libs.labelDialog import LabelDialog
+from libs.deleteConfirmation import DeleteConfirmationDialog
 from libs.renameDialog import RenameDialog
 from libs.colorDialog import ColorDialog
 from libs.labelFile import LabelFile, LabelFileError, LabelFileFormat
@@ -277,7 +278,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'delete', get_str('deleteImgDetail')) #deletes both the image and associated label
 
-        rename_image = action(get_str('renameImg'), self.rename_image, 'Ctrl+Shift+C', 'rename', get_str('renameImgDetail')) #deletes both the image and associated label
+        rename_image = action(get_str('renameImg'), self.rename_image, 'Ctrl+Shift+C', 'rename', get_str('renameImgDetail')) #renames both the image and associated label
 
         reset_all = action(get_str('resetAll'), self.reset_all, None, 'resetall', get_str('resetAllDetail'))
 
@@ -1545,14 +1546,14 @@ class MainWindow(QMainWindow, WindowMixin):
         delete_path = self.file_path
         filename, _ = os.path.splitext(delete_path.rsplit('/', 1)[-1])  # Extracts the filename without extension
         delete_label_path = os.path.join(self.default_save_dir,filename + ".txt")
-        print(self.file_path)
-        print(delete_label_path)
+        self.delete_dialog = DeleteConfirmationDialog(filename)
         if delete_path is not None:
             idx = self.cur_img_idx
             if os.path.exists(delete_path):
-                os.remove(delete_path)
-                os.remove(delete_label_path)
-                print("Deleted"+delete_path+"and"+delete_label_path)
+                if self.delete_dialog.pop_up() == True:
+                    os.remove(delete_path)
+                    os.remove(delete_label_path)
+                print("Deleted"+delete_path+" and "+delete_label_path)
             self.import_dir_images(self.last_open_dir)
             if self.img_count > 0:
                 self.cur_img_idx = min(idx, self.img_count - 1)
