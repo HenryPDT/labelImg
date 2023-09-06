@@ -276,9 +276,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
         close = action(get_str('closeCur'), self.close_file, 'Ctrl+W', 'close', get_str('closeCurDetail'))
 
-        delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'delete', get_str('deleteImgDetail')) #deletes both the image and associated label
+        delete_image = action(get_str('deleteImg'), self.delete_image, 'Ctrl+Shift+D', 'delete', get_str('deleteImgDetail'), enabled=False) #deletes both the image and associated label
 
-        rename_image = action(get_str('renameImg'), self.rename_image, 'Ctrl+Shift+C', 'rename', get_str('renameImgDetail')) #renames both the image and associated label
+        rename_image = action(get_str('renameImg'), self.rename_image, 'Ctrl+Shift+C', 'rename', get_str('renameImgDetail'), enabled=False) #renames both the image and associated label
 
         reset_all = action(get_str('resetAll'), self.reset_all, None, 'resetall', get_str('resetAllDetail'))
 
@@ -413,7 +413,7 @@ class MainWindow(QMainWindow, WindowMixin):
                               advancedContext=(create_mode, edit_mode, edit, copy,
                                                delete, shape_line_color, shape_fill_color),
                               onLoadActive=(
-                                  close, create, create_mode, edit_mode),
+                                  close, create, create_mode, edit_mode, delete_image, rename_image),
                               onShapesPresent=(save_as, hide_all, show_all))
 
         self.menus = Struct(
@@ -619,7 +619,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.menus[0].clear()
         add_actions(self.canvas.menus[0], menu)
         self.menus.edit.clear()
-        actions = (self.actions.create,) if self.beginner()\
+        actions = (self.actions.create, ) if self.beginner()\
             else (self.actions.createMode, self.actions.editMode)
         add_actions(self.menus.edit, actions + self.actions.editMenu)
 
@@ -1547,20 +1547,21 @@ class MainWindow(QMainWindow, WindowMixin):
         filename, _ = os.path.splitext(delete_path.rsplit('/', 1)[-1])  # Extracts the filename without extension
         delete_label_path = os.path.join(self.default_save_dir,filename + ".txt")
         self.delete_dialog = DeleteConfirmationDialog(filename)
-        if delete_path is not None:
-            idx = self.cur_img_idx
-            if os.path.exists(delete_path):
-                if self.delete_dialog.pop_up() == True:
+        if self.delete_dialog.pop_up():
+            self.save_file()
+            if delete_path is not None:
+                idx = self.cur_img_idx
+                if os.path.exists(delete_path):
                     os.remove(delete_path)
                     os.remove(delete_label_path)
-                print("Deleted"+delete_path+" and "+delete_label_path)
-            self.import_dir_images(self.last_open_dir)
-            if self.img_count > 0:
-                self.cur_img_idx = min(idx, self.img_count - 1)
-                filename = self.m_img_list[self.cur_img_idx]
-                self.load_file(filename)
-            else:
-                self.close_file()
+                    print("Deleted"+delete_path+" and "+delete_label_path)
+                self.import_dir_images(self.last_open_dir)
+                if self.img_count > 0:
+                    self.cur_img_idx = min(idx, self.img_count - 1)
+                    filename = self.m_img_list[self.cur_img_idx]
+                    self.load_file(filename)
+                else:
+                    self.close_file()
 
     def rename_image(self):
         old_path = self.file_path
@@ -1573,7 +1574,8 @@ class MainWindow(QMainWindow, WindowMixin):
         if new_filename is not None:
             new_path = os.path.join(self.last_open_dir, new_filename + ext)
             new_label_path = os.path.join(self.default_save_dir, new_filename + ".txt")
-            
+            self.save_file()
+
             if old_path is not None:
                 idx = self.cur_img_idx
                 if os.path.exists(old_path):
