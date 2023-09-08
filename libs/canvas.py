@@ -549,7 +549,7 @@ class Canvas(QWidget):
             self.setPalette(pal)
         else:
             pal = self.palette()
-            pal.setColor(self.backgroundRole(), QColor(232, 232, 232, 255))
+            pal.setColor(self.backgroundRole(), QColor(0, 0, 0, 0))
             self.setPalette(pal)
 
         p.end()

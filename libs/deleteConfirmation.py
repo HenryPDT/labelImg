@@ -15,9 +15,8 @@ class DeleteConfirmationDialog(QDialog):
     def __init__(self, image_name=None, parent=None):
         super(DeleteConfirmationDialog, self).__init__(parent)
 
-        self.image_name = image_name
 
-        self.label = QLabel(f"Are you sure you want to delete the image: {self.image_name}?")
+        self.label = QLabel(f"Are you sure you want to delete the image: {image_name}?")
 
         self.button_box = bb = BB(BB.Yes | BB.No, Qt.Horizontal, self)
         bb.button(BB.Yes).setIcon(new_icon('delete'))

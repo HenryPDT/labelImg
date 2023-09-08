@@ -151,6 +151,9 @@ class MainWindow(QMainWindow, WindowMixin):
         # Create a widget for rename function
         self.rename_dialog = RenameDialog(parent=self)
 
+        # Create a widget for delete function
+        self.delete_dialog = DeleteConfirmationDialog(parent=self)
+
         # Add some of widgets to list_layout
         list_layout.addWidget(self.edit_button)
         list_layout.addWidget(self.diffc_button)
@@ -178,7 +181,6 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dock.setWidget(label_list_container)
 
         self.file_list_widget = QListWidget()
-        self.file_list_widget.itemDoubleClicked.connect(self.save_file) #save file before going to a different file 
         self.file_list_widget.itemDoubleClicked.connect(self.file_item_double_clicked) #double click file to go to next file
         file_list_layout = QVBoxLayout()
         file_list_layout.setContentsMargins(0, 0, 0, 0)
@@ -802,6 +804,17 @@ class MainWindow(QMainWindow, WindowMixin):
 
     # Tzutalin 20160906 : Add file list and dock to move faster
     def file_item_double_clicked(self, item=None):
+        if self.auto_saving.isChecked():
+            if self.default_save_dir is not None:
+                if self.dirty is True:
+                    self.save_file()
+            else:
+                self.change_save_dir_dialog()
+                return
+            
+        if not self.may_continue():
+            return
+        
         self.cur_img_idx = self.m_img_list.index(ustr(item.text()))
         filename = self.m_img_list[self.cur_img_idx]
         if filename:
@@ -1559,7 +1572,7 @@ class MainWindow(QMainWindow, WindowMixin):
         delete_path = self.file_path
         filename, _ = os.path.splitext(delete_path.rsplit('/', 1)[-1])  # Extracts the filename without extension
         delete_label_path = os.path.join(self.default_save_dir,filename + ".txt")
-        self.delete_dialog = DeleteConfirmationDialog(filename)
+        self.delete_dialog = DeleteConfirmationDialog(filename, self)
         if self.delete_dialog.pop_up():
             self.save_file()
             if delete_path is not None:
