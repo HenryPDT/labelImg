@@ -13,6 +13,7 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+
 except ImportError:
     # needed for py3+qt4
     # Ref:
@@ -29,6 +30,7 @@ from libs.default_label_combobox import DefaultLabelComboBox
 from libs.resources import *
 from libs.constants import *
 from libs.utils import *
+from libs.breeze_resources import *
 from libs.settings import Settings
 from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
 from libs.stringBundle import StringBundle
@@ -49,6 +51,7 @@ from libs.create_ml_io import CreateMLReader
 from libs.create_ml_io import JSON_EXT
 from libs.ustr import ustr
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
+
 
 __appname__ = 'labelImg'
 
@@ -440,6 +443,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.display_label_option.setCheckable(True)
         self.display_label_option.setChecked(settings.get(SETTING_PAINT_LABEL, False))
         self.display_label_option.triggered.connect(self.toggle_paint_labels_option)
+        # Enable/disable dark mode
+        self.dark_mode = QAction(get_str('darkMode'), self)
+        self.dark_mode.setCheckable(True)
+        self.dark_mode.setChecked(settings.get(SETTING_DARK_MODE, False))
+        self.dark_mode.triggered.connect(self.toggle_theme)
+        
+        if self.dark_mode.isChecked():
+            self.toggle_theme()
 
         add_actions(self.menus.file,
                     (open, open_dir, change_save_dir, open_annotation, copy_prev_bounding, self.menus.recentFiles, save, save_format, save_as, close, reset_all, delete_image, rename_image, quit))
@@ -448,6 +459,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.auto_saving,
             self.single_class_mode,
             self.display_label_option,
+            self.dark_mode,
             labels, advanced_mode, None,
             hide_all, show_all, None,
             zoom_in, zoom_out, zoom_org, None,
@@ -555,11 +567,11 @@ class MainWindow(QMainWindow, WindowMixin):
             self.open_dir_dialog(dir_path=self.file_path, silent=True)
 
     def keyReleaseEvent(self, event):
-        if event.key() == Qt.Key_Control:
+        if event.key() == Qt.Key_Alt:
             self.canvas.set_drawing_shape_to_square(False)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Control:
+        if event.key() == Qt.Key_Alt:
             # Draw rectangle if Ctrl is pressed
             self.canvas.set_drawing_shape_to_square(True)
 
@@ -1300,6 +1312,7 @@ class MainWindow(QMainWindow, WindowMixin):
         settings[SETTING_PAINT_LABEL] = self.display_label_option.isChecked()
         settings[SETTING_DRAW_SQUARE] = self.draw_squares_option.isChecked()
         settings[SETTING_LABEL_FILE_FORMAT] = self.label_file_format
+        settings[SETTING_DARK_MODE] = self.dark_mode.isChecked()
         settings.save()
 
     def load_recent(self, filename):
@@ -1730,6 +1743,18 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def toggle_draw_square(self):
         self.canvas.set_drawing_shape_to_square(self.draw_squares_option.isChecked())
+
+    def toggle_theme(self):
+        dark_mode = self.dark_mode.isChecked()
+
+        if dark_mode: # Apply dark theme
+            file = QtCore.QFile(":/dark/stylesheet.qss")
+            file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+            stream = QtCore.QTextStream(file)
+            self.setStyleSheet(stream.readAll())
+        else:
+            self.setStyleSheet("")  # Clear any custom stylesheet
+        
 
 def inverted(color):
     return QColor(*[255 - v for v in color.getRgb()])
